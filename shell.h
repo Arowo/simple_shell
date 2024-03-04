@@ -3,36 +3,80 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <unistd.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
+#include <errno.h>
+#include <string.h>
+
 #include <sys/types.h>
-#include "str.h"
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <stdbool.h>
 
-void print_prompt(void);
-void parser(char *buffer, char **cmd);
-int add_path(char **cmd, char **env);
-void print_env(char **env);
-int exit_arg222(char **cmd, char **argv, char *buffer);
-int exit_arg(char **args);
-int REPL(char *buf, size_t buf_len, char **cmd, char **argv, char **env);
-int get_arr_len(char **str);
-unsigned int check_delim(char c, const char *str);
-int _atoi(char *str);
-char *_strcpy(char *dest, char *src);
-int _strcmp(char *str1, char *str2);
-int read_cmd(char **buffer, size_t *buf_len);
-void execute_cmd(char **cmd, char **argv, char **env);
-int _printf(char *);
-char *_strcat(char *dest, char *src);
-int _strlen(char *str);
-char *_strdup(char *str);
-char *build_path(char *token, char *value);
-char *_memset(char *str, char c, unsigned int n);
-char *_getenv(char *buf, char **env_dir);
-int _strncmp(char *str1, char *str2, unsigned int n);
-char *_strtok(char *str, const char *delim);
-void *_realloc(void *ptr, unsigned int old_size, unsigned int new_size);
-
+#ifdef __GNUC__
+#define UNUSED __attribute__((__unused__))
 #endif
+
+#define BUFFER_SIZE 128
+#define PATH_MAX 4096
+
+extern char **environ;
+
+/**
+ * struct builtin_t - builtin function
+ * @name: name of builtin function
+ * @func: pointer to builtin function
+ */
+typedef struct builtin_t
+{
+	char *name;
+	int (*func)(char **argv);
+
+} builtin_t;
+
+int prompt(size_t signum);
+void exit_with_error(int code, char *shell, const char *filename);
+int execute_commands_from_file(char **argv);
+char *handle_path(char *cmd);
+int run_command(char **argv);
+int execute_command(char **argv);
+
+/*-----------builtin function------------------*/
+int (*handle_builtin_func(char *s))(char **argv);
+typedef int (*get_builtin)(char **argv);
+int modifyenv(char **argv);
+int exit_simple_shell(char **argv);
+int printenv(char **argv UNUSED);
+int change_working_dir(char **argv);
+/*--------------------------------------------*/
+
+void trim(char **str);
+int get_argv(char ***argv);
+void free_argv(char **argv);
+int resize_argv(char ***argv, size_t *max_argc);
+char *_getenv(const char *name);
+char **create_env_table(char **envp);
+
+ssize_t _getline(char **lineptr, size_t *n, FILE *stream);
+ssize_t readline(char **lineptr, size_t *n, int fd);
+int resize_getline_buf(char **lineptr, size_t *n, size_t new_size);
+int create_new_env(char *name, char *value);
+int _setenv(char *name, char *value, int overwrite);
+int _unsetenv(char *name);
+
+size_t _strlen(const char *str);
+char *_strchr(const char *str, int character);
+char *_strtok(char *str, const char *delim);
+char *_strcpy(char *dest, const char *src);
+char *_strdup(const char *str);
+char *_strcat(char *dest, char *str1, char *str2, char delim);
+int _strncmp(const char *str1, const char *str2, size_t n);
+int _strcmp(const char *str1, const char *str2);
+
+char *_memset(char *s, char b, unsigned int n);
+char *_memcpy(char *dest, char *src, unsigned int n);
+void *_realloc(void *ptr, size_t size);
+
+void cmd_not_found(char *cmd);
+
+#endif /*
